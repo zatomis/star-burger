@@ -77,6 +77,9 @@ def view_products(request):
             (product, ordered_availability)
         )
 
+    print(request.body.decode())
+
+
     return render(request, template_name="products_list.html", context={
         'products_with_restaurant_availability': products_with_restaurant_availability,
         'restaurants': restaurants,
@@ -94,4 +97,5 @@ def view_restaurants(request):
 def view_orders(request):
     return render(request, template_name='order_items.html', context={
         # TODO заглушка для нереализованного функционала
+
     })
