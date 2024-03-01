@@ -3,6 +3,8 @@ from django.shortcuts import reverse
 from django.templatetags.static import static
 from django.utils.html import format_html
 
+from .models import UserOrder
+from .models import OrderState
 from .models import Product
 from .models import ProductCategory
 from .models import Restaurant
@@ -27,7 +29,7 @@ class RestaurantAdmin(admin.ModelAdmin):
         'contact_phone',
     ]
     inlines = [
-        RestaurantMenuItemInline
+        RestaurantMenuItemInline,
     ]
 
 
@@ -52,9 +54,12 @@ class ProductAdmin(admin.ModelAdmin):
         'category__name',
     ]
 
-    inlines = [
-        RestaurantMenuItemInline
-    ]
+    # inlines = [
+    #     RestaurantMenuItemInline,
+    #     OrderMenuItemInline
+    # ]
+    inlines = (RestaurantMenuItemInline, )
+
     fieldsets = (
         ('Общее', {
             'fields': [
@@ -104,3 +109,29 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(ProductCategory)
 class ProductAdmin(admin.ModelAdmin):
     pass
+
+class OrderMenuItemInline(admin.TabularInline):
+    model = OrderState
+    extra = 0
+
+# @admin.register(UserOrder)
+@admin.register(UserOrder)
+class UserOrderAdmin(admin.ModelAdmin):
+    list_display = [
+        'name',
+        'surname',
+        'address',
+        'phonenumber',
+        'order_date',
+    ]
+    inlines = [
+        OrderMenuItemInline
+    ]
+
+@admin.register(OrderState)
+class AdminOrderState(admin.ModelAdmin):
+    list_display = [
+        'order',
+        'product',
+        'quantity',
+    ]

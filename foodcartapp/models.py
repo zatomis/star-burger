@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from phonenumber_field.modelfields import PhoneNumberField
+from django.utils.timezone import now
 
 
 class Restaurant(models.Model):
@@ -121,3 +123,32 @@ class RestaurantMenuItem(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
+
+
+class UserOrder(models.Model):
+    name = models.CharField('Имя пользователя заказа', max_length=50, null=False)
+    surname = models.CharField('Фамилия пользователя заказа', max_length=50, null=False)
+    address = models.CharField('Адрес для заказа', max_length=250, null=False)
+    phonenumber = PhoneNumberField('Номер телефона', region='RU', blank=True, null=True)
+    order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')
+    comments = models.TextField(verbose_name="Комментарий", blank=True)
+
+    class Meta:
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
+
+    def __str__(self):
+        return f'{self.name} т.{self.phonenumber} от ({self.order_date})'
+
+
+class OrderState(models.Model):
+    order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="state")
+    product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
+    quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
+
+    class Meta:
+        verbose_name = 'Состояние заказа'
+        verbose_name_plural = 'Заказы из корзины'
+
+    def __str__(self):
+        return f'{self.product} [{self.quantity}]'
