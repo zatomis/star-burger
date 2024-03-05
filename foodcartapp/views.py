@@ -2,6 +2,8 @@ import datetime
 
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 import json
 from .models import Product, UserOrder, OrderState
@@ -29,6 +31,7 @@ def banners_list_api(request):
         'ensure_ascii': False,
         'indent': 4,
     })
+
 
 
 def product_list_api(request):
@@ -59,17 +62,19 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
 def register_order(request):
-    post_request = json.loads(request.body.decode())
-    if (post_request['products']):
-        userorder = UserOrder.objects.create(name=post_request['firstname'],
-                                             surname=post_request['lastname'],
-                                             address=post_request['address'],
-                                             phonenumber=post_request['phonenumber'],
+    order = request.request.data
+
+    if (order['products']):
+        userorder = UserOrder.objects.create(name=order['firstname'],
+                                             surname=order['lastname'],
+                                             address=order['address'],
+                                             phonenumber=order['phonenumber'],
                                              order_date=datetime.datetime.now())
-        for product in post_request['products']:
+        for product in order['products']:
             OrderState.objects.create(order=userorder,
                                       product=Product.objects.get(pk=product['product']),
                                       quantity=product['quantity'])
-        # TODO это лишь заглушка
-        return JsonResponse({})
+        print(order)
+        Response(order)
