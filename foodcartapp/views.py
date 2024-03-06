@@ -2,6 +2,7 @@ import datetime
 
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -64,10 +65,27 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    order = request.data
-    print(order)
+    try:
+        order = request.data
+    except ValueError as error:
+        return Response({"Ошибка : ": error}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        try:
+            if not order['products']:
+                content = {"products": "Это поле не может быть пустым"}
+                return Response(content, status=status.HTTP_409_CONFLICT)
+        except ValueError as error:
+            return Response({"Ошибка : ": error}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if not (isinstance(order['products'], list)):
+                content = {"products": "Ожидался list со значениями"}
+                return Response(content, status=status.HTTP_409_CONFLICT)
+            elif order['products'] is None:
+                content = {"products": "Этот список не может быть пустым"}
+                return Response(content, status=status.HTTP_409_CONFLICT)
 
-    if (order['products']):
+            return Response({})
+'''
         userorder = UserOrder.objects.create(name=order['firstname'],
                                              surname=order['lastname'],
                                              address=order['address'],
@@ -77,5 +95,5 @@ def register_order(request):
             OrderState.objects.create(order=userorder,
                                       product=Product.objects.get(pk=product['product']),
                                       quantity=product['quantity'])
-        # print(order)
-        Response(order)
+   '''
+            # return Response({})
