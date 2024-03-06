@@ -64,7 +64,8 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    order = request.request.data
+    order = request.data
+    print(order)
 
     if (order['products']):
         userorder = UserOrder.objects.create(name=order['firstname'],
@@ -76,5 +77,5 @@ def register_order(request):
             OrderState.objects.create(order=userorder,
                                       product=Product.objects.get(pk=product['product']),
                                       quantity=product['quantity'])
-        print(order)
+        # print(order)
         Response(order)
