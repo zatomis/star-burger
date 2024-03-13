@@ -126,8 +126,8 @@ class RestaurantMenuItem(models.Model):
 
 
 class UserOrder(models.Model):
-    name = models.CharField('Имя пользователя заказа', max_length=50, null=False)
-    surname = models.CharField('Фамилия пользователя заказа', max_length=50, null=False)
+    firstname = models.CharField('Имя пользователя заказа', max_length=50, null=False)
+    lastname = models.CharField('Фамилия пользователя заказа', max_length=50, null=False)
     address = models.CharField('Адрес для заказа', max_length=250, null=False)
     phonenumber = PhoneNumberField('Номер телефона', region='RU', blank=True, null=True)
     order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')

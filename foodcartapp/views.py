@@ -5,6 +5,7 @@ from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
 
 import json
 from .models import Product, UserOrder, OrderState
@@ -33,7 +34,18 @@ def banners_list_api(request):
         'indent': 4,
     })
 
+class OrderStateSerializer(ModelSerializer):
+    class Meta:
+        model = OrderState
+        fields = ["product", "quantity"]
 
+
+class OrderSerializer(ModelSerializer):
+    products = OrderStateSerializer(many=True)
+
+    class Meta:
+        model = UserOrder
+        fields = ["firstname", "lastname", "address", "phonenumber", "products"]
 
 def product_list_api(request):
     products = Product.objects.select_related('category').available()
@@ -66,34 +78,22 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     try:
-        order = request.data
+        request.data
     except ValueError as error:
         return Response({"Ошибка : ": error}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        try:
-            if not order['products']:
-                content = {"products": "Это поле не может быть пустым"}
-                return Response(content, status=status.HTTP_409_CONFLICT)
-        except ValueError as error:
-            return Response({"Ошибка : ": error}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            if not (isinstance(order['products'], list)):
-                content = {"products": "Ожидался list со значениями"}
-                return Response(content, status=status.HTTP_409_CONFLICT)
-            elif order['products'] is None:
-                content = {"products": "Этот список не может быть пустым"}
-                return Response(content, status=status.HTTP_409_CONFLICT)
 
-            return Response({})
-'''
-        userorder = UserOrder.objects.create(name=order['firstname'],
-                                             surname=order['lastname'],
-                                             address=order['address'],
-                                             phonenumber=order['phonenumber'],
-                                             order_date=datetime.datetime.now())
-        for product in order['products']:
-            OrderState.objects.create(order=userorder,
-                                      product=Product.objects.get(pk=product['product']),
-                                      quantity=product['quantity'])
-   '''
-            # return Response({})
+    serializer = OrderSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    userorder = UserOrder.objects.create(
+                firstname=serializer.validated_data["firstname"],
+                lastname=serializer.validated_data["lastname"],
+                phonenumber=serializer.validated_data["phonenumber"],
+                address=serializer.validated_data["address"],
+                order_date=datetime.datetime.now())
+
+    order_state_fields = serializer.validated_data["products"]
+    order_contents = [OrderState(order=userorder, **fields) for fields in order_state_fields]
+    OrderState.objects.bulk_create(order_contents)
+
+    return Response({})

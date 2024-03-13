@@ -118,8 +118,8 @@ class OrderMenuItemInline(admin.TabularInline):
 @admin.register(UserOrder)
 class UserOrderAdmin(admin.ModelAdmin):
     list_display = [
-        'name',
-        'surname',
+        'firstname',
+        'lastname',
         'address',
         'phonenumber',
         'order_date',
