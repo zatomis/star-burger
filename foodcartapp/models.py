@@ -138,7 +138,7 @@ class UserOrder(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return f'{self.name} т.{self.phonenumber} от ({self.order_date})'
+        return f'{self.firstname} т.{self.phonenumber} от ({self.order_date})'
 
 
 class OrderState(models.Model):

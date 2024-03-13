@@ -41,11 +41,11 @@ class OrderStateSerializer(ModelSerializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = OrderStateSerializer(many=True)
+    products = OrderStateSerializer(many=True, allow_empty=False, write_only=True)
 
     class Meta:
         model = UserOrder
-        fields = ["firstname", "lastname", "address", "phonenumber", "products"]
+        fields = ["id", "firstname", "lastname", "address", "phonenumber", "products"]
 
 def product_list_api(request):
     products = Product.objects.select_related('category').available()
@@ -95,5 +95,4 @@ def register_order(request):
     order_state_fields = serializer.validated_data["products"]
     order_contents = [OrderState(order=userorder, **fields) for fields in order_state_fields]
     OrderState.objects.bulk_create(order_contents)
-
-    return Response({})
+    return Response(OrderSerializer(userorder).data)
