@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db.models import Count, F, Sum
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.timezone import now
 
@@ -124,6 +125,15 @@ class RestaurantMenuItem(models.Model):
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
+class OrderQuerySet(models.QuerySet):
+
+    def total_count(self):
+        return self.annotate(total_count_position=Count(F("order_states")))
+
+    def total_price(self):
+        return self.annotate(
+            total_price=Sum(F("order_states__quantity") * F("order_states__product__price"))
+        )
 
 class UserOrder(models.Model):
     firstname = models.CharField('Имя пользователя заказа', max_length=50, null=False)
@@ -132,6 +142,8 @@ class UserOrder(models.Model):
     phonenumber = PhoneNumberField('Номер телефона', region='RU', blank=True, null=True)
     order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')
     comments = models.TextField(verbose_name="Комментарий", blank=True)
+
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
@@ -142,7 +154,7 @@ class UserOrder(models.Model):
 
 
 class OrderState(models.Model):
-    order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="state")
+    order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
     quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
 
