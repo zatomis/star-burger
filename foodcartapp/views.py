@@ -7,8 +7,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
-
-import json
 from .models import Product, UserOrder, OrderState
 
 
@@ -95,6 +93,11 @@ def register_order(request):
                 order_date=datetime.datetime.now())
 
     order_state_fields = serializer.validated_data["products"]
-    order_contents = [OrderState(order=userorder, **fields) for fields in order_state_fields]
+    products = [field["product"] for field in order_state_fields]
+    prices = {product.id: product.price for product in products}
+    order_contents = [OrderState(
+        order=userorder,
+        price = prices[fields["product"].id],
+        **fields) for fields in order_state_fields]
     OrderState.objects.bulk_create(order_contents)
     return Response(OrderSerializer(userorder).data)

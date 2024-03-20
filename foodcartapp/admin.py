@@ -137,6 +137,8 @@ class AdminOrderState(admin.ModelAdmin):
         'price',
     ]
 
+    ordering = ('-price',)
+
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
         for instance in instances:
