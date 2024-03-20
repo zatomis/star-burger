@@ -1,7 +1,7 @@
 from django import forms
 from django.shortcuts import redirect, render
 from django.views import View
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.decorators import user_passes_test
 
 from django.contrib.auth import authenticate, login
@@ -100,7 +100,9 @@ def view_orders(request):
         "phonenumber": order.phonenumber,
         "address": order.address,
         "total_price": order.total_price,
-        "total_count_position": order.total_count_position
+        "total_count_position": order.total_count_position,
+        "link": reverse("admin:foodcartapp_userorder_change", args=(order.id,)),
+        "link_del": reverse("admin:foodcartapp_userorder_delete", args=(order.id,))
     } for order in orders]
     return render(request, template_name='order_items.html', context={"order_items": serialized_orders})
 

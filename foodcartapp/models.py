@@ -132,7 +132,7 @@ class OrderQuerySet(models.QuerySet):
 
     def total_price(self):
         return self.annotate(
-            total_price=Sum(F("order_states__quantity") * F("order_states__product__price"))
+            total_price=Sum(F("order_states__price"))
         )
 
 class UserOrder(models.Model):
