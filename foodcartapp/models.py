@@ -157,7 +157,13 @@ class OrderState(models.Model):
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
     quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
-
+    price = models.DecimalField(
+        verbose_name="стоимость позиции",
+        validators=[MinValueValidator(0)],
+        decimal_places=2,
+        max_digits=7,
+        blank=True,
+    )
     class Meta:
         verbose_name = 'Состояние заказа'
         verbose_name_plural = 'Заказы из корзины'

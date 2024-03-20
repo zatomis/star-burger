@@ -134,4 +134,13 @@ class AdminOrderState(admin.ModelAdmin):
         'order',
         'product',
         'quantity',
+        'price',
     ]
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            product_price = instance.product.price
+            instance.price = product_price
+            instance.save()
+        formset.save_m2m()
