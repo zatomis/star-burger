@@ -154,9 +154,18 @@ class UserOrder(models.Model):
 
 
 class OrderState(models.Model):
+    ORDER_CHOICES = (
+        (-1, 'Заказ выполнен'),
+        (0, 'Необработанный'),
+        (1, 'Принят в работу'),
+        (2, 'Заказ на сборке'),
+        (3, 'Передан курьеру'),
+    )
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
     quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
+    status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
+
     price = models.DecimalField(
         verbose_name="стоимость позиции",
         validators=[MinValueValidator(0)],

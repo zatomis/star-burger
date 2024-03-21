@@ -93,6 +93,7 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = UserOrder.objects.prefetch_related("order_states").total_price().total_count().order_by('order_date')
+    # orders = UserOrder.objects.prefetch_related("order_states").total_price().total_count().order_by('order_date').filter(status__gte=0)
     serialized_orders = [{
         "id": order.id,
         "firstname": order.firstname,

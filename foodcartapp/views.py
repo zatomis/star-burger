@@ -74,8 +74,8 @@ def product_list_api(request):
     })
 
 
-@transaction.atomic
 @api_view(['POST'])
+@transaction.atomic
 def register_order(request):
     try:
         request.data
