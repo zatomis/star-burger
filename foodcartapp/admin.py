@@ -124,6 +124,7 @@ class UserOrderAdmin(admin.ModelAdmin):
         'lastname',
         'address',
         'phonenumber',
+        'status',
         'order_date',
     ]
     inlines = [
@@ -143,13 +144,12 @@ class UserOrderAdmin(admin.ModelAdmin):
 class AdminOrderState(admin.ModelAdmin):
     list_display = [
         'order',
-        'status',
         'product',
         'quantity',
         'price',
     ]
 
-    ordering = ('-status',)
+    ordering = ('-order',)
 
     def response_change(self, request, obj):
         res = super(AdminOrderState, self).response_change(request, obj)

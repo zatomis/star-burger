@@ -130,18 +130,27 @@ class OrderQuerySet(models.QuerySet):
     def total_count(self):
         return self.annotate(total_count_position=Count(F("order_states")))
 
+
     def total_price(self):
         return self.annotate(
             total_price=Sum(F("order_states__price"))
         )
 
 class UserOrder(models.Model):
-    firstname = models.CharField('Имя пользователя заказа', max_length=50, null=False)
-    lastname = models.CharField('Фамилия пользователя заказа', max_length=50, null=False)
-    address = models.CharField('Адрес для заказа', max_length=250, null=False)
-    phonenumber = PhoneNumberField('Номер телефона', region='RU', blank=True, null=True)
+    ORDER_CHOICES = (
+        (-1, 'Заказ выполнен'),
+        (0, 'Необработанный'),
+        (1, 'Принят в работу'),
+        (2, 'Заказ на сборке'),
+        (3, 'Передан курьеру'),
+    )
+    firstname = models.CharField('Имя', max_length=50, null=False)
+    lastname = models.CharField('Фамилия', max_length=50, null=False)
+    address = models.CharField('Адрес заказа', max_length=250, null=False)
+    phonenumber = PhoneNumberField('Номер 📳', region='RU', blank=True, null=True)
     order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')
     comments = models.TextField(verbose_name="Комментарий", blank=True)
+    status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -150,22 +159,13 @@ class UserOrder(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return f'{self.firstname} т.{self.phonenumber} от ({self.order_date})'
+        return f'{self.firstname} т.{self.phonenumber} ({self.get_status_display()})'
 
 
 class OrderState(models.Model):
-    ORDER_CHOICES = (
-        (-1, 'Заказ выполнен'),
-        (0, 'Необработанный'),
-        (1, 'Принят в работу'),
-        (2, 'Заказ на сборке'),
-        (3, 'Передан курьеру'),
-    )
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
     quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
-    status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
-
     price = models.DecimalField(
         verbose_name="стоимость позиции",
         validators=[MinValueValidator(0)],
