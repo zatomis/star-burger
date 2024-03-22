@@ -159,10 +159,16 @@ class AdminOrderState(admin.ModelAdmin):
         else:
             return res
 
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=False)
-        for instance in instances:
-            product_price = instance.product.price
-            instance.price = product_price
-            instance.save()
-        formset.save_m2m()
+    def save_formset(self, request, obj, form, change):
+        if not obj.pk or 'quantity' in form.changed_data:
+            item_price = obj.item.price if obj.item else 0
+            obj.price = item_price * obj.quantity
+        super().save_model(request, obj, form, change)
+
+    # def save_formset(self, request, form, formset, change):
+    #     instances = formset.save(commit=False)
+    #     for instance in instances:
+    #         product_price = instance.product.price
+    #         instance.price = product_price
+    #         instance.save()
+    #     formset.save_m2m()

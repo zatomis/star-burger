@@ -149,7 +149,7 @@ class UserOrder(models.Model):
     address = models.CharField('Адрес заказа', max_length=250, null=False)
     phonenumber = PhoneNumberField('Номер 📳', region='RU', blank=True, null=True)
     order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')
-    comments = models.TextField(verbose_name="Комментарий", blank=True)
+    comment = models.TextField(verbose_name="Комментарий", blank=True)
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
 
     objects = OrderQuerySet.as_manager()

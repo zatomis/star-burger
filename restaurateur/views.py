@@ -100,6 +100,7 @@ def view_orders(request):
         "lastname": order.lastname,
         "phonenumber": order.phonenumber,
         "address": order.address,
+        "comment": order.comment,
         "total_price": order.total_price,
         "total_count_position": order.total_count_position,
         "link": reverse("admin:foodcartapp_userorder_change", args=(order.id,)),
