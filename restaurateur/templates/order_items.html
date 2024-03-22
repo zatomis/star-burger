@@ -20,6 +20,7 @@
       <th>Сумма заказа</th>
       <th>Клиент</th>
       <th>Телефон</th>
+      <th>🫰</th>
       <th>Адрес доставки</th>
       <th>Комментарий</th>
       <th>Ссылка на админку</th>
@@ -34,6 +35,7 @@
         <td>{{ item.total_price }} р.</td>
         <td>{{ item.firstname }} {{ item.lastname }}</td>
         <td>{{ item.phonenumber }}</td>
+        <td>{{ item.payment }}</td>
         <td>{{ item.address }}</td>
         <td>{{ item.comment|truncatechars:30 }}</td>
         <td><a href="{{item.link}}?next={{ request.get_full_path|urlencode}}">Редактировать</a></td>

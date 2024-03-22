@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import Count, F, Sum
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.timezone import now
 
@@ -144,13 +145,18 @@ class UserOrder(models.Model):
         (2, 'Заказ на сборке'),
         (3, 'Передан курьеру'),
     )
+    PAYMENT_METHOD = ((False, '💰'), (True, '💳'))
+
     firstname = models.CharField('Имя', max_length=50, null=False)
     lastname = models.CharField('Фамилия', max_length=50, null=False)
     address = models.CharField('Адрес заказа', max_length=250, null=False)
     phonenumber = PhoneNumberField('Номер 📳', region='RU', blank=True, null=True)
-    order_date = models.DateTimeField(help_text="Дата заказа", default=now, editable=False, verbose_name='Дата заказа')
     comment = models.TextField(verbose_name="Комментарий", blank=True)
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
+    registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now, editable=False, verbose_name='Заказ')
+    call_date = models.DateTimeField(help_text="Дата звонка", blank=True, verbose_name='Созвон')
+    delivered_date = models.DateTimeField(help_text="Дата доставки", blank=True, verbose_name='Доставка')
+    payment = models.BooleanField(default=True, verbose_name='Оплата', choices=PAYMENT_METHOD, db_index=True)
 
     objects = OrderQuerySet.as_manager()
 
@@ -159,8 +165,11 @@ class UserOrder(models.Model):
         verbose_name_plural = 'заказы'
 
     def __str__(self):
-        return f'{self.firstname} т.{self.phonenumber} ({self.get_status_display()})'
+        return f'{self.firstname} {self.correct_phone_number(self.phonenumber)} ({self.get_status_display()})'
 
+    @classmethod
+    def correct_phone_number(cls, number):
+        return 'т. ' + str(number)#[0:2]
 
 class OrderState(models.Model):
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")

@@ -56,10 +56,6 @@ class ProductAdmin(admin.ModelAdmin):
         'category__name',
     ]
 
-    # inlines = [
-    #     RestaurantMenuItemInline,
-    #     OrderMenuItemInline
-    # ]
     inlines = (RestaurantMenuItemInline, )
 
     fieldsets = (
@@ -116,16 +112,20 @@ class OrderMenuItemInline(admin.TabularInline):
     model = OrderState
     extra = 0
 
-# @admin.register(UserOrder)
 @admin.register(UserOrder)
 class UserOrderAdmin(admin.ModelAdmin):
+    list_display_links = [
+        'phonenumber',
+    ]
     list_display = [
         'firstname',
         'lastname',
         'address',
         'phonenumber',
         'status',
-        'order_date',
+        'registr_date',
+        'call_date',
+        'delivered_date',
     ]
     inlines = [
         OrderMenuItemInline

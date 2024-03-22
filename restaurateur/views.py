@@ -99,6 +99,7 @@ def view_orders(request):
         "firstname": order.firstname,
         "lastname": order.lastname,
         "phonenumber": order.phonenumber,
+        "payment": order.get_payment_display(),
         "address": order.address,
         "comment": order.comment,
         "total_price": order.total_price,
