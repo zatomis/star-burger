@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import Count, F, Sum
+from django.dispatch import receiver
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.timezone import now
@@ -126,10 +127,20 @@ class RestaurantMenuItem(models.Model):
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
+class OrderStateQuerySet(models.QuerySet):
+
+    def get_unique_user_id(self):
+        user_id = set()
+        for product in self:
+            user_id.add(product.order.id)
+        return list(user_id)
+
+
 class OrderQuerySet(models.QuerySet):
 
     def total_count(self):
         return self.annotate(total_count_position=Count(F("order_states")))
+
 
 
     def total_price(self):
@@ -150,26 +161,38 @@ class UserOrder(models.Model):
     firstname = models.CharField('Имя', max_length=50, null=False)
     lastname = models.CharField('Фамилия', max_length=50, null=False)
     address = models.CharField('Адрес заказа', max_length=250, null=False)
-    phonenumber = PhoneNumberField('Номер 📳', region='RU', blank=True, null=True)
+    phonenumber = PhoneNumberField('Номер ☎️', region='RU', blank=True, null=True, default='-')
     comment = models.TextField(verbose_name="Комментарий", blank=True)
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
     registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now, editable=False, verbose_name='Заказ')
     call_date = models.DateTimeField(help_text="Дата звонка", blank=True, verbose_name='Созвон')
     delivered_date = models.DateTimeField(help_text="Дата доставки", blank=True, verbose_name='Доставка')
     payment = models.BooleanField(default=True, verbose_name='Оплата', choices=PAYMENT_METHOD, db_index=True)
-
+    available_restaurants = models.ManyToManyField(
+        Restaurant,
+        verbose_name="доступные рестораны",
+        blank=True
+    )
     objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
 
+    def save(self, *args, **kwargs):
+        if not self.available_restaurants.all():
+            if self.status == 0:
+                self.status = self.status + 1
+        super(UserOrder, self).save(*args, **kwargs)
+
     def __str__(self):
-        return f'{self.firstname} {self.correct_phone_number(self.phonenumber)} ({self.get_status_display()})'
+        return f'{self.firstname} {self.correct_phone_number(self.phonenumber)} ({self.get_status_display()}) - id {self.id}'
 
     @classmethod
     def correct_phone_number(cls, number):
-        return 'т. ' + str(number)#[0:2]
+        return ' ☎️ 8('+str(number)[2:5]+')'+str(number)[5:8]+'-'+str(number)[8:10]+'-'+str(number)[10:]
+
+
 
 class OrderState(models.Model):
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
@@ -182,6 +205,9 @@ class OrderState(models.Model):
         max_digits=7,
         blank=True,
     )
+
+    objects = OrderStateQuerySet.as_manager()
+
     class Meta:
         verbose_name = 'Состояние заказа'
         verbose_name_plural = 'Заказы из корзины'

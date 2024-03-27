@@ -8,8 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
-from foodcartapp.models import Product, Restaurant, UserOrder
-from foodcartapp.views import OrderSerializer
+from foodcartapp.models import Product, Restaurant, UserOrder, OrderState, RestaurantMenuItem
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -92,6 +91,19 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
+    users = OrderState.objects.get_unique_user_id()
+    user_products_in_restaurant = dict()
+
+    for user in users:
+        products = OrderState.objects.filter(order_id=user)
+        product_in_restaurants = set()
+        for product in products:
+            restaurants = RestaurantMenuItem.objects.filter(product_id=product.product_id)
+            for restaurant in restaurants:
+                if restaurant.availability:
+                    product_in_restaurants.add(restaurant.restaurant)
+            user_products_in_restaurant[user]=list(product_in_restaurants)
+
     orders = UserOrder.objects.prefetch_related("order_states").total_price().total_count().order_by('status').filter(status__gte=0)
     serialized_orders = [{
         "id": order.id,
@@ -101,6 +113,14 @@ def view_orders(request):
         "phonenumber": order.phonenumber,
         "payment": order.get_payment_display(),
         "address": order.address,
+        "restaurants": '<p style="color:#0000ff"><b>Заказ будет приготовлен в </b></p>'+' '.join(map(str,[restaurant.name for restaurant in order.available_restaurants.all()])) if ' '.join(map(str,[restaurant.name for restaurant in order.available_restaurants.all()])) else
+            "<p style='background-color:LightBlue;'>Нет позиций в заказе</p>" if not order.id in users else
+            "<p style='background-color:Tomato;'>Нет ресторанов для приготовления заказа</p>"
+            if not user_products_in_restaurant[order.id] else
+            '<b>Возможно приготовить в </b>' +
+            "<details><summary>" +
+            ' '.join(
+                map(str, [restaurants for restaurants in user_products_in_restaurant[order.id]])) + "</summary></details>",
         "comment": order.comment,
         "total_price": order.total_price,
         "total_count_position": order.total_count_position,

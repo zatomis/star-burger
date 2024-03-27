@@ -21,7 +21,8 @@
       <th>Клиент</th>
       <th>Телефон</th>
       <th>🫰</th>
-      <th>Адрес доставки</th>
+      <th>Адрес</th>
+      <th>Рестораны</th>
       <th>Комментарий</th>
       <th>Ссылка на админку</th>
       <th>Удаление</th>
@@ -37,6 +38,7 @@
         <td>{{ item.phonenumber }}</td>
         <td>{{ item.payment }}</td>
         <td>{{ item.address }}</td>
+        <td>{{ item.restaurants|safe }}</td>
         <td>{{ item.comment|truncatechars:30 }}</td>
         <td><a href="{{item.link}}?next={{ request.get_full_path|urlencode}}">Редактировать</a></td>
         <td><a href="{{item.link_del}}?next={{ request.get_full_path|urlencode}}">❌</a></td>

@@ -38,6 +38,7 @@ class RestaurantAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
+        'id',
         'get_image_list_preview',
         'name',
         'category',
@@ -140,9 +141,20 @@ class UserOrderAdmin(admin.ModelAdmin):
             return res
 
 
+@admin.register(RestaurantMenuItem)
+class AdminRestaurantMenuItem(admin.ModelAdmin):
+    list_display = [
+        'restaurant',
+        'product',
+        'availability',
+    ]
+
+
+
 @admin.register(OrderState)
 class AdminOrderState(admin.ModelAdmin):
     list_display = [
+        'id',
         'order',
         'product',
         'quantity',
