@@ -1,15 +1,19 @@
+import requests
 from django import forms
-from django.shortcuts import redirect, render
-from django.views import View
-from django.urls import reverse_lazy, reverse
-from django.contrib.auth.decorators import user_passes_test
-
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-import requests
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.views import View
 from geopy import distance
-from django.conf import settings
-from foodcartapp.models import Product, Restaurant, UserOrder, OrderState, RestaurantMenuItem
+
+from coordinates.models import Location
+from foodcartapp.models import (OrderState, Product, Restaurant,
+                                RestaurantMenuItem, UserOrder)
+
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -89,6 +93,7 @@ def view_restaurants(request):
         'restaurants': Restaurant.objects.all(),
     })
 
+
 def fetch_coordinates(apikey, address):
     base_url = "https://geocode-maps.yandex.ru/1.x"
     response = requests.get(base_url, params={
@@ -104,18 +109,29 @@ def fetch_coordinates(apikey, address):
 
     most_relevant = found_places[0]
     lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lat, lon
+    return lon, lat
 
-def calculate_distance(order_address, restaurant_address):
-    try:
-        order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
-        restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
-    except (requests.HTTPError, requests.ConnectionError):
+
+def get_location(address):
+    location, created = Location.objects.get_or_create(
+        address=address, defaults={"last_check": timezone.now()}
+    )
+    if created:
+        coords = fetch_coordinates(settings.YANDEX_API_KEY, location.address)
+        if coords:
+            location.lon, location.lat = coords
+            location.save()
+    return location
+
+
+def calculate_distance(location1, location2):
+    coordinates_1 = location1.lat, location1.lon
+    coordinates_2 = location2.lat, location2.lon
+    if None not in coordinates_1 and None not in coordinates_2:
+        return str(round(distance.distance(coordinates_1, coordinates_2).km, 2))
+    else:
         return "Ошибка определения координат"
-    if not order_coords:
-        return "Ошибка определения координат"
-    distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
-    return distance_to_restaurant.km
+
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
@@ -130,9 +146,10 @@ def view_orders(request):
             for restaurant in restaurants:
                 if restaurant.availability:
                     product_in_restaurants.add(restaurant.restaurant)
-            user_products_in_restaurant[user]=list(product_in_restaurants)
+            user_products_in_restaurant[user] = list(product_in_restaurants)
 
-    orders = UserOrder.objects.prefetch_related("order_states").total_price().total_count().order_by('status').filter(status__gte=0)
+    orders = UserOrder.objects.prefetch_related("order_states").total_price().\
+        total_count().order_by('status').filter(status__gte=0)
     serialized_orders = [{
         "id": order.id,
         "status": order.get_status_display(),
@@ -141,7 +158,9 @@ def view_orders(request):
         "phonenumber": order.phonenumber,
         "payment": order.get_payment_display(),
         "address": order.address,
-        "restaurants": '<p style="color:#0000ff"><b>Заказ будет приготовлен в </b></p>'+' '.join(map(str,[restaurant.name for restaurant in order.available_restaurants.all()])) if ' '.join(map(str,[restaurant.name for restaurant in order.available_restaurants.all()])) else
+        "restaurants": '<p style="color:#0000ff"><b>Заказ будет приготовлен в </b></p>' +
+                       ' '.join(map(str, [restaurant.name for restaurant in order.available_restaurants.all()]))
+            if ' '.join(map(str, [restaurant.name for restaurant in order.available_restaurants.all()])) else
             "<p style='background-color:LightBlue;'>Нет позиций в заказе</p>" if not order.id in users else
             "<p style='background-color:Tomato;'>Нет ресторанов для приготовления заказа</p>"
             if not user_products_in_restaurant[order.id] else
@@ -150,9 +169,8 @@ def view_orders(request):
                 map(str, [restaurants for restaurants in user_products_in_restaurant[order.id]])),
         "available_restaurants": [{
             "restaurant": restaurant,
-            "distance": calculate_distance(restaurant.address, order.address)
+            "distance": calculate_distance(get_location(restaurant.address), get_location(order.address))
         } for restaurant in order.available_restaurants.all()],
-
         "comment": order.comment,
         "total_price": order.total_price,
         "total_count_position": order.total_count_position,
@@ -160,4 +178,3 @@ def view_orders(request):
         "link_del": reverse("admin:foodcartapp_userorder_delete", args=(order.id,))
     } for order in orders]
     return render(request, template_name='order_items.html', context={"order_items": serialized_orders})
-

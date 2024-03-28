@@ -1,9 +1,9 @@
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.db.models import Count, F, Sum
 from django.utils import timezone
-from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.timezone import now
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Restaurant(models.Model):
