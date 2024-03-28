@@ -6,8 +6,9 @@ from django.contrib.auth.decorators import user_passes_test
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-
-
+import requests
+from geopy import distance
+from django.conf import settings
 from foodcartapp.models import Product, Restaurant, UserOrder, OrderState, RestaurantMenuItem
 
 class Login(forms.Form):
@@ -88,6 +89,33 @@ def view_restaurants(request):
         'restaurants': Restaurant.objects.all(),
     })
 
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lat, lon
+
+def calculate_distance(order_address, restaurant_address):
+    try:
+        order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
+        restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
+    except (requests.HTTPError, requests.ConnectionError):
+        return "Ошибка определения координат"
+    if not order_coords:
+        return "Ошибка определения координат"
+    distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
+    return distance_to_restaurant.km
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
@@ -118,9 +146,13 @@ def view_orders(request):
             "<p style='background-color:Tomato;'>Нет ресторанов для приготовления заказа</p>"
             if not user_products_in_restaurant[order.id] else
             '<b>Возможно приготовить в </b>' +
-            "<details><summary>" +
             ' '.join(
-                map(str, [restaurants for restaurants in user_products_in_restaurant[order.id]])) + "</summary></details>",
+                map(str, [restaurants for restaurants in user_products_in_restaurant[order.id]])),
+        "available_restaurants": [{
+            "restaurant": restaurant,
+            "distance": calculate_distance(restaurant.address, order.address)
+        } for restaurant in order.available_restaurants.all()],
+
         "comment": order.comment,
         "total_price": order.total_price,
         "total_count_position": order.total_count_position,

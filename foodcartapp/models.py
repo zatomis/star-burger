@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import Count, F, Sum
-from django.dispatch import receiver
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.timezone import now
@@ -22,6 +21,16 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
+    # longitude = models.FloatField(
+    #     'Долгота',
+    #     null=True,
+    #     blank=True,
+    # )
+    # latitude = models.FloatField(
+    #     'Широта',
+    #     null=True,
+    #     blank=True,
+    # )
 
     class Meta:
         verbose_name = 'ресторан'
@@ -34,8 +43,7 @@ class Restaurant(models.Model):
 class ProductQuerySet(models.QuerySet):
     def available(self):
         products = (
-            RestaurantMenuItem.objects
-            .filter(availability=True)
+            RestaurantMenuItem.objects.filter(availability=True)
             .values_list('product')
         )
         return self.filter(pk__in=products)
@@ -127,6 +135,7 @@ class RestaurantMenuItem(models.Model):
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
+
 class OrderStateQuerySet(models.QuerySet):
 
     def get_unique_user_id(self):
@@ -141,12 +150,11 @@ class OrderQuerySet(models.QuerySet):
     def total_count(self):
         return self.annotate(total_count_position=Count(F("order_states")))
 
-
-
     def total_price(self):
         return self.annotate(
             total_price=Sum(F("order_states__price"))
         )
+
 
 class UserOrder(models.Model):
     ORDER_CHOICES = (
@@ -164,7 +172,8 @@ class UserOrder(models.Model):
     phonenumber = PhoneNumberField('Номер ☎️', region='RU', blank=True, null=True, default='-')
     comment = models.TextField(verbose_name="Комментарий", blank=True)
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
-    registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now, editable=False, verbose_name='Заказ')
+    registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now,
+                                        editable=False, verbose_name='Заказ')
     call_date = models.DateTimeField(help_text="Дата звонка", blank=True, verbose_name='Созвон')
     delivered_date = models.DateTimeField(help_text="Дата доставки", blank=True, verbose_name='Доставка')
     payment = models.BooleanField(default=True, verbose_name='Оплата', choices=PAYMENT_METHOD, db_index=True)
@@ -186,12 +195,12 @@ class UserOrder(models.Model):
         super(UserOrder, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.firstname} {self.correct_phone_number(self.phonenumber)} ({self.get_status_display()}) - id {self.id}'
+        return f'{self.firstname} {self.correct_phone_number(self.phonenumber)}' \
+               f' ({self.get_status_display()}) - id {self.id}'
 
     @classmethod
     def correct_phone_number(cls, number):
         return ' ☎️ 8('+str(number)[2:5]+')'+str(number)[5:8]+'-'+str(number)[8:10]+'-'+str(number)[10:]
-
 
 
 class OrderState(models.Model):
