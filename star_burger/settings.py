@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 INSTALLED_APPS += [
     'phonenumber_field',
     'rest_framework',
+    'coordinates',
     'django_extensions',
 ]
 
