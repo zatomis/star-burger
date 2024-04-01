@@ -155,7 +155,7 @@ class UserOrder(models.Model):
         (2, 'Заказ на сборке'),
         (3, 'Передан курьеру'),
     )
-    PAYMENT_METHOD = ((False, '💰'), (True, '💳'))
+    PAYMENT_METHOD = ((False, 'Наличные'), (True, 'Оплата картой'))
 
     firstname = models.CharField('Имя', max_length=50, null=False)
     lastname = models.CharField('Фамилия', max_length=50, null=False)
