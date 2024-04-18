@@ -9,7 +9,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 class Restaurant(models.Model):
     name = models.CharField(
         'название',
-        max_length=50
+        max_length=50,
+        blank=True
     )
     address = models.CharField(
         'адрес',
@@ -146,6 +147,8 @@ class OrderQuerySet(models.QuerySet):
             total_price=Sum(F("order_states__price"))
         )
 
+def allRestaurant():
+    return Restaurant.objects.first().id
 
 class UserOrder(models.Model):
     ORDER_CHOICES = (
@@ -165,24 +168,27 @@ class UserOrder(models.Model):
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
     registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now,
                                         editable=False, verbose_name='Заказ')
-    call_date = models.DateTimeField(help_text="Дата звонка", blank=True, verbose_name='Созвон')
-    delivered_date = models.DateTimeField(help_text="Дата доставки", blank=True, verbose_name='Доставка')
+    call_date = models.DateTimeField(help_text="Дата звонка", blank=True, null=True, default=timezone.now, verbose_name='Созвон')
+    delivered_date = models.DateTimeField(help_text="Дата доставки", blank=True, null=True, default=timezone.now, verbose_name='Доставка')
     payment = models.BooleanField(default=True, verbose_name='Оплата', choices=PAYMENT_METHOD, db_index=True)
     available_restaurants = models.ManyToManyField(
         Restaurant,
         verbose_name="доступные рестораны",
-        blank=True
+        blank=True,
+        null=True,
+        default=allRestaurant
     )
+
     objects = OrderQuerySet.as_manager()
 
     class Meta:
         verbose_name = 'заказ'
         verbose_name_plural = 'заказы'
 
+
     def save(self, *args, **kwargs):
-        if not self.available_restaurants.all():
-            if self.status == 0:
-                self.status = self.status + 1
+        if self.status == 0:
+            self.status = self.status + 1
         super(UserOrder, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -197,7 +203,7 @@ class UserOrder(models.Model):
 class OrderState(models.Model):
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
-    quantity = models.SmallIntegerField(default=0, verbose_name='Кол-во заказа')
+    quantity = models.SmallIntegerField(verbose_name='Кол-во заказа')
     price = models.DecimalField(
         verbose_name="стоимость позиции",
         validators=[MinValueValidator(0)],

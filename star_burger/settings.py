@@ -7,10 +7,8 @@ env = Env()
 env.read_env()
 
 YANDEX_API_KEY = env.str("YANDEX_API_KEY")
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 CORS_REPLACE_HTTPS_REFERER = False
 HOST_SCHEME = "http://"
 SECURE_PROXY_SSL_HEADER = None

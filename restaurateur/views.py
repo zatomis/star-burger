@@ -142,11 +142,9 @@ def view_orders(request):
         products = OrderState.objects.filter(order_id=user)
         product_in_restaurants = set()
         for product in products:
-            restaurants = RestaurantMenuItem.objects.filter(product_id=product.product_id)
-            for restaurant in restaurants:
-                if restaurant.availability:
-                    product_in_restaurants.add(restaurant.restaurant)
-            user_products_in_restaurant[user] = list(product_in_restaurants)
+            restaurants = RestaurantMenuItem.objects.filter(product_id=product.product_id, availability=True)
+            products_in_restaurants = [product_in_restaurants.add(restaurant.restaurant) for restaurant in restaurants]
+            user_products_in_restaurant[user] = products_in_restaurants
 
     orders = UserOrder.objects.prefetch_related("order_states").total_price().\
         total_count().order_by('status').filter(status__gte=0)
@@ -158,15 +156,6 @@ def view_orders(request):
         "phonenumber": order.phonenumber,
         "payment": order.get_payment_display(),
         "address": order.address,
-        "restaurants": '<p style="color:#0000ff"><b>Заказ будет приготовлен в </b></p>' +
-                       ' '.join(map(str, [restaurant.name for restaurant in order.available_restaurants.all()]))
-            if ' '.join(map(str, [restaurant.name for restaurant in order.available_restaurants.all()])) else
-            "<p style='background-color:LightBlue;'>Нет позиций в заказе</p>" if not order.id in users else
-            "<p style='background-color:Tomato;'>Нет ресторанов для приготовления заказа</p>"
-            if not user_products_in_restaurant[order.id] else
-            '<b>Возможно приготовить в </b>' +
-            ' '.join(
-                map(str, [restaurants for restaurants in user_products_in_restaurant[order.id]])),
         "available_restaurants": [{
             "restaurant": restaurant,
             "distance": calculate_distance(get_location(restaurant.address), get_location(order.address))

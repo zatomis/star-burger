@@ -43,6 +43,36 @@ class OrderStateSerializer(ModelSerializer):
 class OrderSerializer(ModelSerializer):
     products = OrderStateSerializer(many=True, allow_empty=False, write_only=True)
 
+    def create(self, validated_data):
+        order_items_fields = validated_data.pop('products')
+        order = UserOrder.objects.create(**validated_data)
+        order_items = [OrderState(order=order, price=fields['product'].price, **fields)
+                       for fields in order_items_fields]
+        OrderState.objects.bulk_create(order_items)
+        return order
+
+    def create1(self, validated_data):
+        products_data = validated_data.pop('products')
+        userorder = UserOrder.objects.create(**validated_data)
+        for product_data in products_data:
+            OrderState.objects.create(order=userorder, **product_data)
+        return userorder
+
+        order_state_fields = validated_data.pop('products')
+        products = [field["product"] for field in order_state_fields]
+        prices = {product.id: product.price for product in products}
+        order_contents = [OrderState(
+            order=userorder,
+            price = prices[fields["product"].id],
+            **fields) for fields in order_state_fields]
+        OrderState.objects.bulk_create(order_contents)
+
+        order_items = [OrderItem(order=order, price=fields['product'].price, **fields)
+                       for fields in order_items_fields]
+        OrderItem.objects.bulk_create(order_items)
+        return order
+
+
     class Meta:
         model = UserOrder
         fields = ["id", "firstname", "lastname", "address", "phonenumber", "products"]
@@ -85,20 +115,5 @@ def register_order(request):
 
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
-    userorder = UserOrder.objects.create(
-                firstname=serializer.validated_data["firstname"],
-                lastname=serializer.validated_data["lastname"],
-                phonenumber=serializer.validated_data["phonenumber"],
-                address=serializer.validated_data["address"],
-                order_date=datetime.datetime.now())
-
-    order_state_fields = serializer.validated_data["products"]
-    products = [field["product"] for field in order_state_fields]
-    prices = {product.id: product.price for product in products}
-    order_contents = [OrderState(
-        order=userorder,
-        price = prices[fields["product"].id],
-        **fields) for fields in order_state_fields]
-    OrderState.objects.bulk_create(order_contents)
+    userorder = serializer.save()
     return Response(OrderSerializer(userorder).data)
