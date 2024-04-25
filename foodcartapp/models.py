@@ -163,7 +163,7 @@ class UserOrder(models.Model):
     firstname = models.CharField('Имя', max_length=50, null=False)
     lastname = models.CharField('Фамилия', max_length=50, null=False)
     address = models.CharField('Адрес заказа', max_length=250, null=False)
-    phonenumber = PhoneNumberField('Номер ☎️', region='RU', blank=True, null=True, default='-')
+    phonenumber = PhoneNumberField('Номер ☎️', region='RU', blank=True, null=True)
     comment = models.TextField(verbose_name="Комментарий", blank=True)
     status = models.SmallIntegerField(default=0, verbose_name='Статус заказа', choices=ORDER_CHOICES, db_index=True)
     registr_date = models.DateTimeField(help_text="Дата регистрации заказа", blank=True, default=timezone.now,
@@ -203,7 +203,7 @@ class UserOrder(models.Model):
 class OrderState(models.Model):
     order = models.ForeignKey(UserOrder, verbose_name="заказ", on_delete=models.CASCADE, related_name="order_states")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="orders")
-    quantity = models.SmallIntegerField(verbose_name='Кол-во заказа')
+    quantity = models.SmallIntegerField(verbose_name='Кол-во заказа', validators=[MinValueValidator(0)])
     price = models.DecimalField(
         verbose_name="стоимость позиции",
         validators=[MinValueValidator(0)],
