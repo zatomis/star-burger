@@ -58,6 +58,10 @@ pip install -r requirements.txt
 ```sh
 SECRET_KEY=django-insecure-0if402nf4nf93n4
 ```
+Дополнительно установите
+```sh
+pip install django-extensions
+```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
 
@@ -79,6 +83,12 @@ python manage.py runserver
 
 [Установите Node.js](https://nodejs.org/en/), если у вас его ещё нет.
 
+Для Linux
+```sh
+sudo apt update
+sudo apt install nodejs
+sudo apt install npm
+```
 Проверьте, что Node.js и его пакетный менеджер корректно установлены. Если всё исправно, то терминал выведет их версии:
 
 ```sh
