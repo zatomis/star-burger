@@ -1,4 +1,5 @@
 import os
+from git import Repo
 
 import dj_database_url
 from environs import Env
@@ -25,10 +26,12 @@ DEBUG = env.bool('DEBUG', True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost', '*'])
 ROLLBAR_TOKEN = env('ROLLBAR_TOKEN_KEY')
 
+branch = Repo(path=BASE_DIR).active_branch.name
 
 ROLLBAR = {
     'access_token': ROLLBAR_TOKEN,
-    'environment': env.str('ENVIRONMENT', 'development'),
+    'environment': env.str('ENVIRONMENT', 'Development'),
+    'branch': branch,
     'code_version': '1.0',
     'root': BASE_DIR,
 }
