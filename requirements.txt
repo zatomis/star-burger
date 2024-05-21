@@ -8,7 +8,7 @@ django-phonenumber-field==7.3.0
 environs==9.3.2
 marshmallow==3.20.2
 packaging==23.2
-Pillow==8.2.0
+Pillow==10.3.0
 python-dotenv==1.0.1
 pytz==2024.1
 sqlparse==0.4.4
