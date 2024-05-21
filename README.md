@@ -147,7 +147,12 @@ Parcel будет следить за файлами в каталоге `bundle
 
 Собрать фронтенд:
 
-Для работы сайта необходимо установить [PostgreSQL](https://www.postgresql.org/download/)
+Для работы сайта необходимо установить [PostgreSQL](https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-django-application-on-ubuntu-14-04)
+```sh
+sudo su - postgres
+psql
+```
+
 И создать там БД
 ```sh
 CREATE DATABASE starburger;
@@ -178,6 +183,57 @@ pip install psycopg2-binary
 - `YANDEX_API_KEY` — API ключ для подключения [геокодера](https://developer.tech.yandex.com/services)
 - `ROLLBAR_TOKEN_KEY` — API ключ для контроля ошибок вашего сайта подробнее на [Rollbar](https://app.rollbar.com/)
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+
+
+## Установочный скрипт
+Непосредственно в каталоге данного репозитория находится скрипт, упрощающий запуск сайта
+Для файла `deploy_star_burger.sh` необходимо сделать его исполняемым и запустить
+```sh
+chmod ugo+x deploy_star_burger.sh
+```
+
+Предполагается что сервер NGINX будет у вас уже запущен и сконфигурирован, а также созданы службы
+```sh
+  location / { include '/etc/nginx/proxy_params';
+    proxy_pass http://127.0.0.1:8080/; }
+  location /media/ { alias /opt/star-burger/media/; }
+  location /static/ { alias /opt/star-burger/staticfiles/; }
+```
+
+- Служба для запуска сайта, файл `burger-shop-devman.service` с содержимым
+```sh
+[Unit]
+Description=Star_Burger_site
+Requires=postgresql.service
+[Service]
+Type=simple
+WorkingDirectory=/opt/star-burger
+ExecStart=/opt/star-burger/venv/bin/gunicorn -b "127.0.0.1:8080" star_burger.wsgi:application
+EnvironmentFile=/opt/star-burger/.env
+Restart=always
+[Install]
+WantedBy=multi-user.target
+```
+
+- Служба сертификации, файл `certbot-renewal.service` с содержимым
+```sh
+[Unit]
+Description=Certbot Renewal
+[Service]
+ExecStart=/usr/bin/certbot renew --force-renewal --post-hook "systemctl reload nginx.service"
+```
+
+- Служба обновления сертификатов, файл `certbot-renewal.timer` с содержимым
+```sh
+[Unit]
+Description=Timer for Certbot Renewal
+[Timer]
+OnBootSec=300
+OnUnitActiveSec=2w
+[Install]
+WantedBy=multi-user.target
+```
+
 
 ## Цели проекта
 
