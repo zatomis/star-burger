@@ -147,11 +147,31 @@ Parcel будет следить за файлами в каталоге `bundle
 
 Собрать фронтенд:
 
+Для работы сайта необходимо установить [PostgreSQL](https://www.postgresql.org/download/)
+И создать там БД
+```sh
+CREATE DATABASE starburger;
+CREATE USER starburger_db_user WITH PASSWORD 'тут указать свой пароль';
+ALTER ROLE starburger_db_user SET client_encoding TO 'utf8';
+ALTER ROLE starburger_db_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE starburger_db_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE starburger TO starburger_db_user;
+```
+Для подключения к БД необходимо создать файл и объявить переменную `.env`, вида
+
+- `DATABASE_URL` = "postgresql://starburger_db_user:тут_указать_свой_пароль@localhost/starburger"
+и установить дополнение в своем окружении
+
+```sh
+pip install dj-database-url
+pip install psycopg2-binary
+```
+
 ```sh
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
-Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
+Настроить бэкенд: в файле `.env` в каталога `star_burger/` со следующими настройками:
 
 - `DEBUG` — дебаг-режим. Поставьте `False`.
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
