@@ -31,7 +31,7 @@ fi
 
 FILE=/etc/systemd/system/nginx.service
 if test -f "$FILE"; then
-	sudo systemctl restart nginx.service
+	sudo systemctl restart /etc/systemd/system/nginx.service
 else
 	echo -n "Отсутствует NGINX сервис"$'\n'$FILE$'\n'"Необходимо установить"
 fi
