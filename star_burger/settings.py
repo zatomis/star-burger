@@ -23,7 +23,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['.zatomis.ru', '127.0.0.1', 'localhost', '*'])
-ROLLBAR_TOKEN = env('ROLLBAR_TOKEN_KEY')
+ROLLBAR_TOKEN = env('ROLLBAR_TOKEN_KEY', '')
 
 branch = Repo(path=BASE_DIR).active_branch.name
 
@@ -112,9 +112,6 @@ MEDIA_URL = '/media/'
 DATABASES = {
     'default': dj_database_url.parse(env('DATABASE_URL'))
 }
-
-
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {

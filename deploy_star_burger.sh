@@ -14,9 +14,9 @@ pip install rollbar
 clear
 echo 'Установка NodeJS '
 npm ci --dev
-#./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./" &
+./node_modules/.bin/parcel bundles-src/index.js --dist-dir bundles --public-url="./"
 echo 'Сбор статики '
-python3 manage.py collectstatic
+python3 manage.py collectstatic --noinput
 echo 'Выполнение миграции '
 python3 manage.py migrate
 clear
@@ -25,20 +25,6 @@ echo 'Перезапуск служб '
 FILE=/etc/systemd/system/burger-shop-devman.service
 if test -f "$FILE"; then
 	systemctl restart burger-shop-devman.service
-else
-	echo -n "Отсутствует файл для работы сервиса"$'\n'$FILE$'\n'"Необходимо создать. Используйте Readme проекта"
-fi
-
-FILE=/etc/systemd/system/certbot-renewal.service
-if test -f "$FILE"; then
-	systemctl restart certbot-renewal.service
-else
-	echo -n "Отсутствует файл для работы сервиса"$'\n'$FILE$'\n'"Необходимо создать. Используйте Readme проекта"
-fi
-
-FILE=/etc/systemd/system/certbot-renewal.timer
-if test -f "$FILE"; then
-	systemctl restart certbot-renewal.timer
 else
 	echo -n "Отсутствует файл для работы сервиса"$'\n'$FILE$'\n'"Необходимо создать. Используйте Readme проекта"
 fi

@@ -208,7 +208,7 @@ Requires=postgresql.service
 [Service]
 Type=simple
 WorkingDirectory=/opt/star-burger
-ExecStart=/opt/star-burger/venv/bin/gunicorn -b "127.0.0.1:8080" star_burger.wsgi:application
+ExecStart=/opt/star-burger/venv/bin/gunicorn -w 3 -b "127.0.0.1:8080" star_burger.wsgi:application
 EnvironmentFile=/opt/star-burger/.env
 Restart=always
 [Install]
@@ -234,7 +234,9 @@ OnUnitActiveSec=2w
 WantedBy=multi-user.target
 ```
 
+## Пример работы
+Пример работы сайта доступно по [адресу](https://zatomis.ru) 🍔.
+
 
 ## Цели проекта
-
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
