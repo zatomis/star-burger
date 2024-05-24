@@ -24,14 +24,14 @@ echo 'Перезапуск служб '
 
 FILE=/etc/systemd/system/burger-shop-devman.service
 if test -f "$FILE"; then
-	systemctl restart burger-shop-devman.service
+	sudo systemctl restart burger-shop-devman.service
 else
 	echo -n "Отсутствует файл для работы сервиса"$'\n'$FILE$'\n'"Необходимо создать. Используйте Readme проекта"
 fi
 
 FILE=/etc/systemd/system/nginx.service
 if test -f "$FILE"; then
-	systemctl restart nginx.service
+	sudo systemctl restart nginx.service
 else
 	echo -n "Отсутствует NGINX сервис"$'\n'$FILE$'\n'"Необходимо установить"
 fi
