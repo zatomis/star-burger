@@ -13,9 +13,53 @@
 
 Третий интерфейс — это админка. Преимущественно им пользуются программисты при разработке сайта. Также сюда заходит менеджер, чтобы обновить меню ресторанов Star Burger.
 
+## Настройки перед запуском сайта
+Для работы создаем основную БД для управления сайта. Развернем ей в докере
+Создаем `docker-compose.yml`
+```sh
+version: "3.8"
+services:
+  db:
+    container_name: postgres_container
+    image: postgres
+    restart: always
+    environment:
+    #Важно задать имя, пароль, имя базы - эти данные можно потом будет брать из файла .env
+      POSTGRES_USER: star...user
+      POSTGRES_PASSWORD: pas...56
+      POSTGRES_DB: st...er
+    ports:
+    #для избежания конфликтов изменим основной порт
+      - "5454:5432"
+  # для удобства администрирования см. https://www.youtube.com/watch?v=qECVC6t_2mU
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+```
+
+## Важное ! Файл `.env`
+```sh
+SECRET_KEY=djang...f93n4
+YANDEX_API_KEY=0ea7...75f45a1
+ROLLBAR_TOKEN_KEY=218a...6e92
+ENVIRONMENT="Production"
+DATABASE_URL="postgresql://имя пользователя в БД:Пароль@Адрес сайта БД:Порт-5454/имя БД"
+```
+
 ## Как запустить dev-версию сайта
 
-Для запуска сайта нужно запустить **одновременно** бэкенд и фронтенд, в двух терминалах.
+Для запуска сайта нужно использовать команду
+```sh
+docker-compose -f docker-compose.local-dev.yaml up -d
+```
+Сайт запускается локально по адресу http://0.0.0.0:8000
+
 
 ### Как собрать бэкенд
 
