@@ -1,44 +1,21 @@
-#!/bin/bash -e
-clear
-echo "Сегодня " `date`
-echo 'Выполняется обновление данных'
+#!/bin/bash
+set -e
 git pull
-echo 'Создание среды окружения Python'
-python3 -m venv venv
-source venv/bin/activate
-echo 'Установка зависимостей '
-pip install -r requirements.txt
-pip install django-extensions
-pip install rollbar
+echo "Сегодня " `date`
+
+docker-compose -f docker-compose.prod.yml exec django-web bash -c "pip3 install -r requirements.txt &&
+    python3 manage.py collectstatic --noinput &&
+    python3 manage.py migrate --noinput"
+
+docker-compose -f docker-compose.prod.yml up -d node-web
+docker-compose -f docker-compose.prod.yml restart django-web
+docker-compose -f docker-compose.prod.yml restart nginx
+hash=$(git rev-parse HEAD)
+
 clear
-echo 'Установка NodeJS '
-npm ci --dev
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
-echo 'Сбор статики '
-python3 manage.py collectstatic --noinput
-echo 'Выполнение миграции '
-python3 manage.py migrate
-clear
-echo 'Перезапуск служб '
-
-FILE=/etc/systemd/system/burger-shop-devman.service
+echo 'Выполняется обновление данных'
+FILE=.env
 if test -f "$FILE"; then
-	sudo systemctl restart burger-shop-devman.service
-else
-	echo -n "Отсутствует файл для работы сервиса"$'\n'$FILE$'\n'"Необходимо создать. Используйте Readme проекта"
-fi
-
-FILE1=/etc/systemd/system/nginx.service
-if test -f "$FILE1"; then
-	sudo systemctl reload nginx.service
-else
-	clear
-	echo -n "Отсутствует NGINX сервис"$'\n'$FILE1$'\n'"Необходимо установить"
-fi
-
-FILE=/opt/star-burger/.env
-if test -f "$FILE"; then
-	cd /opt/star-burger
 	source .env
 	git_id="$(git rev-parse --verify HEAD)"
 	user="$(whoami)"
@@ -57,8 +34,7 @@ if test -f "$FILE"; then
 	  "comment": "Comment git: '$git_id'",
 	  "status": "succeeded"
 	}'
+	echo "Деплой успешно произведен"
 else
 	echo -n "Отсутствует основной файл конфигурации .env"$'\n'$FILE$'\n'"Необходимo прочесть Readme"
 fi
-
-echo -n "Ok..."
