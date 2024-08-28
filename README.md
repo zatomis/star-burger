@@ -62,7 +62,6 @@ docker-compose -f docker-compose.local-dev.yaml up -d
 
 
 ### Как собрать бэкенд
-
 Скачайте код:
 ```sh
 git clone https://github.com/devmanorg/star-burger.git
