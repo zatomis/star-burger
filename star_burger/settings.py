@@ -7,23 +7,27 @@ env = Env()
 env.read_env()
 
 YANDEX_API_KEY = env.str("YANDEX_API_KEY")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-CORS_REPLACE_HTTPS_REFERER = False
-HOST_SCHEME = "http://"
-SECURE_PROXY_SSL_HEADER = None
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_HSTS_SECONDS = None
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_FRAME_DENY = False
+#CORS_REPLACE_HTTPS_REFERER = False
+#HOST_SCHEME = "http://"
+#SECURE_PROXY_SSL_HEADER = None
+#SECURE_SSL_REDIRECT = False
+#SESSION_COOKIE_SECURE = False
+#CSRF_COOKIE_SECURE = False
+#CSRF_TRUSTED_ORIGINS = ["https://zatomis.ru"]
+#CSRF_TRUSTED_ORIGINS = list(env('DOMAIN'))
+#SECURE_HSTS_SECONDS = None
+#SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+#SECURE_FRAME_DENY = False
+
 
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', True)
+DEBUG = env.bool('DEBUG', False)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['.zatomis.ru', '127.0.0.1', 'localhost', '*'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['.zatomis.ru', '127.0.0.1', 'localhost', '0.0.0.0', '5.35.95.186'])
 ROLLBAR_TOKEN = env('ROLLBAR_TOKEN_KEY', '')
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 branch = Repo(path=BASE_DIR).active_branch.name
 

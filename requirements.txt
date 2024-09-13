@@ -1,7 +1,7 @@
 asgiref==3.7.2
 dj-database-url==2.1.0
 dj-email-url==1.0.6
-Django==5
+Django==4.2.11
 django-extensions==3.2.3
 django-cache-url==3.4.5
 django-debug-toolbar==3.2.1
@@ -25,3 +25,6 @@ geographiclib==2.0
 phonenumbers==8.13.31
 urllib3==2.2.1
 GitPython==3.1.43
+rollbar==1.0.0
+gevent==24.2.1
+gunicorn==23.0.0
